@@ -1,0 +1,173 @@
+     /**
+     * id，用于检索失败的记录
+     */
+    @ExcelProperty(value = "主键id")
+    private String id;
+
+    @ExcelProperty(value = "板块类型（家电/3C数码/家装/适老化）")
+    private String plateType;
+    /**
+     * 商户订单号
+     */
+    @ExcelProperty(value = "商户订单号")
+    private String mchntOrdNo;
+
+    /**
+     * 二级商户编号
+     */
+    private String secondaryMerchantNumber;
+    /**
+     * 开票日期
+     * 开票日期应当在消费者付款后1个月内
+     */
+    private String invoiceDt;
+    /**
+     * 发票金额
+     */
+    private String invoiceAmt;
+    @ExcelProperty(value = "发票号")
+    private String invoiceNo;
+
+    /**
+     * 发票抬头(发票购买方名称)
+     */
+    @ExcelProperty(value = "发票抬头(发票购买方名称)")
+    private String invoiceHead;
+    /**
+     * 发票项目名称
+     */
+    @ExcelProperty(value = "发票项目名称")
+    private String invoiceProName;
+    /**
+     * 发票订单号
+     */
+    @ExcelProperty(value = "发票订单号")
+    private String invoiceOrderNo;
+    /**
+     * 发票政府补贴金额
+     */
+    @ExcelProperty(value = "发票补贴金额")
+    private String invoiceSubsidyAmt;
+    /**
+     * 购买方识别码(个人是身份证/企业是统一社会信用代码)
+     */
+    private String buyerIdentificationCode;
+
+    /**
+     * 平台发票订单号
+     */
+    private String platformInvoiceOrderNumber;
+    /**
+     * 配送方式（自提/商家配送/物流）
+     */
+    @ExcelProperty(value = "配送方式（填数字：自提0/商家配送1/物流配送2）")
+    private String logisticsMode;
+    /**
+     * 收货地址
+     */
+    @ExcelProperty(value = "收货地址")
+    private String flowRcvgdsAdrs;
+    /**
+     * 自提/物流单号
+     */
+    @ExcelProperty(value = "自提/物流单号")
+    private String lgstcOrdNo;
+    /**
+     * 签收时间
+     */
+    @ExcelProperty(value = "签收时间（YYYY-MM-DD）")
+    private String sgnacptTm;
+    /**
+     * 商品明细
+     */
+    @ExcelProperty(value = "商品明细(可为空)")
+    private String goodsDtl;
+    /**
+     * 商品名称
+     */
+    @ExcelProperty(value = "商品名称")
+    private String goodsNm;
+    /**
+     * 商品编码/69码
+     */
+    @ExcelProperty(value = "商品编码/69码")
+    private String goodsBarcd;
+    /**
+     * 单位
+     */
+    @ExcelProperty(value = "单位(可为空)")
+    private String goodsUnit;
+    /**
+     * 数量
+     */
+    @ExcelProperty(value = "数量(可为空)")
+    private String goodsQty;
+    /**
+     * 商品品牌
+     */
+    @ExcelProperty(value = "商品品牌")
+    private String goodsBrnd;
+    /**
+     * 商品型号
+     */
+    @ExcelProperty(value = "商品型号")
+    private String goodsModel;
+    /**
+     * 商品品类
+     */
+    @ExcelProperty(value = "商品品类")
+    private String goodsCategory;
+    /**
+     * 商品品类编码
+     */
+    private String goodsCateCd;
+    /**
+     * S/N码
+     */
+    @ExcelProperty(value = "S/N码(可为空)")
+    private String sn;
+    /**
+     * 商户报名区县
+     */
+    @ExcelProperty(value = "商户报名区县编码（例如：430101）")
+    private String mchntCounty;
+
+    @ExcelProperty(value = "销方识别码")
+    private String mchntUscc;
+    @ExcelProperty(value = "销方单位")
+    private String sellingUnit;
+    /**
+     * 发票备注
+     */
+    @ExcelProperty(value = "发票备注")
+    private String remark;
+    /**
+     * 发票照片名
+     */
+    @ExcelProperty(value = "发票照片名")
+    private String image0;
+    /**
+     * 签购单照片名
+     */
+    @ExcelProperty(value = "签购单照片名")
+    private String image1;
+    /**
+     * 送货单(签字)
+     */
+    @ExcelProperty(value = "送货单(签字)")
+    private String image2;
+    /**
+     * 能效标识水印照片名
+     */
+    @ExcelProperty(value = "送货照片(水印)")
+    private String image3;
+    /**
+     * 购物小票/销售单照片名
+     */
+    @ExcelProperty(value = "购物小票/销售单图片")
+    private String image4;
+    /**
+     * 实物照片名
+     */
+    @ExcelProperty(value = "其他照片(可为空)")
+    private String image5;
