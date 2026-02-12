@@ -1,0 +1,73 @@
+# 依赖
+node_modules/
+.pnp
+.pnp.js
+
+# 测试覆盖率
+coverage/
+*.lcov
+
+# 生产构建
+dist/
+build/
+.next/
+out/
+.turbo/
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# 数据库
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+
+# 上传文件
+uploads/
+temp/
+*.tmp
+
+# 日志文件
+logs/
+*.log
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+
+# 临时文件
+tmp/
+temp/
+.cache/
+
+# 锁文件
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

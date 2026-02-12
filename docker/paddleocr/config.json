@@ -1,0 +1,17 @@
+{
+  "det_model_dir": "./inference/ch_ppocr_mobile_v2.0_det_infer",
+  "rec_model_dir": "./inference/ch_ppocr_mobile_v2.0_rec_infer",
+  "cls_model_dir": "./inference/ch_ppocr_mobile_v2.0_cls_infer",
+  "use_angle_cls": true,
+  "lang": "ch",
+  "use_space_char": true,
+  "drop_score": 0.5,
+  "max_batch_size": 10,
+  "max_text_length": 25,
+  "show_log": false,
+  "enable_mkldnn": true,
+  "cpu_threads": 4,
+  "use_gpu": false,
+  "gpu_id": 0,
+  "gpu_mem": 500
+}

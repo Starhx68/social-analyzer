@@ -1,0 +1,157 @@
+============================================================
+==========================更新SN数据==========================
+============================================================
+<?xml version="1.0" encoding="GB2312"?>
+<Program>
+    <appid>80</appid>
+    <FunctionID>HG800025</FunctionID>
+    <Action>updateSubsidy</Action>
+    <parameters>
+    </parameters>
+    <data_list>
+        <row1>
+            <vgbel>525620542811</vgbel>
+            <vbeln></vbeln>
+            <sn>258065009666110108030200012</sn>
+            <imei1></imei1>
+            <imei2></imei2>
+            <zydid></zydid>
+            <addr></addr>
+            <pic_list></pic_list>
+            <rtn_msg></rtn_msg>
+        </row1>
+    </data_list>
+    <addition-xml>
+        <row1>
+            <add1>APPUser</add1>
+            <add2>107898</add2>
+            <add3>10.10.1.999</add3>
+            <add4>1A682300CCE8D608ABProd</add4>
+        </row1>
+    </addition-xml>
+</Program>
+
+============================================================
+==========================更新SN数据.失败返回==================
+============================================================
+<Program>
+    <ErrorNo>0</ErrorNo>
+    <UIMessage>ok</UIMessage>
+    <ErrorMessage>HG800025批量导入SN失败!HG800022批量导入SN失败!</ErrorMessage>
+    <ErrorType>0</ErrorType>
+    <parameters>
+        <flag>failure</flag>
+        <log_session_id>APP0120260130113423946_1</log_session_id>
+    </parameters>
+    <return_info>
+        <row1>
+            <vgbel>525620542811</vgbel>
+            <vbeln></vbeln>
+            <rtn_msg>交货单或订单不存在!</rtn_msg>
+        </row1>
+    </return_info>
+</Program>
+
+============================================================
+==========================更新SN数据.成功返回==================
+============================================================
+<Program>
+    <ErrorNo>1</ErrorNo>
+    <UIMessage>ok</UIMessage>
+    <ErrorMessage>HG800025批量导入SN成功!</ErrorMessage>
+    <ErrorType>0</ErrorType>
+    <parameters>
+        <flag>success</flag>
+        <log_session_id>APP0120260130113512839_1</log_session_id>
+    </parameters>
+    <return_info>
+        <row1>
+            <vgbel>5256205428</vgbel>
+            <vbeln>1206228552</vbeln>
+        </row1>
+    </return_info>
+</Program>
+
+
+============================================================
+==========================获取发票==========================
+============================================================
+<?xml version="1.0" encoding="GB2312"?>
+<Program>
+    <appid>80</appid>
+    <FunctionID>HG800025</FunctionID>
+    <Action>getInvoice</Action>
+    <parameters>
+        <order_no>5256205428</order_no>
+    </parameters>
+    <addition-xml>
+        <row1>
+            <add1>APPUser</add1>
+            <add2>107898</add2>
+            <add3>10.10.1.999</add3>
+            <add4>1A682300CCE8D608ABProd</add4>
+        </row1>
+    </addition-xml>
+</Program>
+
+============================================================
+==========================获取发票.成功返回====================
+============================================================
+<Program>
+    <ErrorNo>1</ErrorNo>
+    <UIMessage>ok</UIMessage>
+    <ErrorMessage>获取电子发票成功</ErrorMessage>
+    <ErrorType>0</ErrorType>
+    <parameters>
+        <log_session_id>APP0120260130113648195_1</log_session_id>
+    </parameters>
+    <invoice_list>
+        <row1>
+            <order_no>5256205428</order_no>
+            <pdf_file></pdf_file>
+            <kplx>0</kplx>
+            <qrcode></qrcode>
+            <gmf_mc>李婧</gmf_mc>
+            <fpqqlsh_up></fpqqlsh_up>
+            <return_msg>成功!</return_msg>
+            <fp_hm>25437000000281491848</fp_hm>
+            <fwmw></fwmw>
+            <fp_dm></fp_dm>
+            <fpqqlsh>KLG20250916130816208</fpqqlsh>
+            <imgurl>https://xywtgsp-new.happigo.com/2025/09/16/13/f6998c06-2076-4d36-96de-cd8c90c7b8bf.png</imgurl>
+            <kprq>2025-09-16</kprq>
+            <qzzt></qzzt>
+            <vbeln>1206228552</vbeln>
+            <hjbhsje>3803.54</hjbhsje>
+            <ssyf></ssyf>
+            <deal_date>2025-09-16 13:56:18</deal_date>
+            <hjse>494.46</hjse>
+            <insert_date>2025-09-16 13:08:16</insert_date>
+            <xhqdbz></xhqdbz>
+            <pdfurl>
+                http://10.10.33.82:9000/cwgx/91430100MA4Q4MCW8A/20250916/dzfp_25437000000281491848_李婧_20250916135025.pdf
+            </pdfurl>
+            <platform_code>KLGN_DIANZIFAPIAO</platform_code>
+            <szqm></szqm>
+            <ewm></ewm>
+            <jshj>4298</jshj>
+            <gmf_nsrsbh>431382200503090246</gmf_nsrsbh>
+            <jym></jym>
+            <status>20</status>
+        </row1>
+    </invoice_list>
+</Program>
+
+============================================================
+==========================获取发票.失败返回====================
+============================================================
+<Program>
+    <ErrorNo>1</ErrorNo>
+    <UIMessage>ok</UIMessage>
+    <ErrorMessage>获取电子发票成功</ErrorMessage>
+    <ErrorType>0</ErrorType>
+    <parameters>
+        <log_session_id>APP0120260130114154580_1</log_session_id>
+    </parameters>
+    <invoice_list></invoice_list>
+</Program>

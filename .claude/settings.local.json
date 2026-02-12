@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run dev:h5:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(node:*)",
+      "Bash(npm run dev:*)",
+      "Bash(dir:*)"
+    ]
+  }
+}
