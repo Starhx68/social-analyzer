@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NavBar, Card, Form, Input, Button, Toast, Tag, Dialog, ImageViewer } from 'antd-mobile';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -13,7 +13,7 @@ const getMaterialTypes = (plateType) => {
       { key: 'invoice', label: '发票照片', required: true, maxCount: 1 },
       { key: 'delivery_note', label: '送货单照片', required: true, maxCount: 1 },
       { key: 'sn_photo', label: 'SN码水印照片', required: true, maxCount: 1 },
-      { key: 'energy_label', label: '能效标识水印照片', required: false, maxCount: 1 },
+      { key: 'energy_label', label: '能效标识水印照片', required: true, maxCount: 1 },
       { key: 'receipt', label: '销售清单或购物小票照片', required: false, maxCount: 1 },
       { key: 'product_photo', label: '实物照片', required: false, maxCount: 1 },
     ],
@@ -70,11 +70,7 @@ const UploadPage = () => {
     return url.replace('localhost', window.location.hostname);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const orderRes = await getOrderDetail(id);
@@ -95,7 +91,11 @@ const UploadPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleUpload = async (file, materialType) => {
     let uploadFile = file;
@@ -255,6 +255,19 @@ const UploadPage = () => {
   };
 
   const handleSubmitAudit = async () => {
+    const configs = getMaterialTypes(order.plate_type);
+    const requiredConfigs = configs.filter(c => c.required);
+    const missingConfigs = requiredConfigs.filter(c => !materials.some(m => m.material_type === c.key));
+    const needSn = requiredConfigs.some(c => c.key === 'sn_photo');
+    const snVal = snCode || order.sn_code || imei1 || order.imei1;
+
+    if (missingConfigs.length || (needSn && !snVal)) {
+      const items = [...missingConfigs.map(c => c.label)];
+      if (needSn && !snVal) items.push('SN码或IMEI码');
+      Toast.show({ icon: 'fail', content: `请先上传：${items.join('、')}` });
+      return;
+    }
+
     const result = await Dialog.confirm({
       content: '确认提交审核吗？提交后无法修改资料。',
     });
@@ -262,7 +275,7 @@ const UploadPage = () => {
       try {
         await submitAudit(id);
         Toast.show({ icon: 'success', content: '提交成功' });
-        fetchData(); // Refresh status
+        fetchData();
       } catch (error) {
         Toast.show({ icon: 'fail', content: error.response?.data?.error || '提交失败' });
       }
@@ -335,7 +348,20 @@ const UploadPage = () => {
             }));
 
           return (
-            <Card title={config.label} key={config.key} style={{ marginBottom: 12 }}>
+            <Card
+              key={config.key}
+              title={
+                <>
+                  {config.label}
+                  {config.required ? (
+                    <span style={{ color: 'red', marginLeft: 4 }}>*必填</span>
+                  ) : (
+                    <span style={{ color: '#999', marginLeft: 4 }}>(选填)</span>
+                  )}
+                </>
+              }
+              style={{ marginBottom: 12 }}
+            >
               {/* Native File Input as fallback */}
               <div style={{ marginBottom: 10 }}>
                 <input 
@@ -363,7 +389,7 @@ const UploadPage = () => {
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {currentFiles.map((file, idx) => (
+                {currentFiles.map((file) => (
                   <div key={file.key} style={{ position: 'relative', width: 80, height: 80 }}>
                     <img 
                       src={file.url} 

@@ -163,6 +163,44 @@ class WebServiceUtils {
     const response = await this.sendRequest(buffer);
     return { ...response, requestXml: string };
   }
+
+  /**
+   * SN 查询接口 (HG960828)
+   * @param {Object} params { sn: string, homa_order_no: string }
+   */
+  static async querySn(params) {
+    const { sn, homa_order_no } = params;
+
+    const dataList = {
+      row1: {
+        sn: sn || '',
+        homa_order_no: homa_order_no || ''
+      }
+    };
+
+    const { buffer, string } = this.buildXml('querySn', {}, dataList);
+    const response = await this.sendRequest(buffer);
+    return { ...response, requestXml: string };
+  }
+
+  /**
+   * SN 锁定接口 (HG960828)
+   * @param {Object} params { sn: string, homa_order_no: string }
+   */
+  static async lockSn(params) {
+    const { sn, homa_order_no } = params;
+
+    const dataList = {
+      row1: {
+        sn: sn || '',
+        homa_order_no: homa_order_no || ''
+      }
+    };
+
+    const { buffer, string } = this.buildXml('lockSn', {}, dataList);
+    const response = await this.sendRequest(buffer);
+    return { ...response, requestXml: string };
+  }
 }
 
 module.exports = WebServiceUtils;

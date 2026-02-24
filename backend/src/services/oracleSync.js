@@ -53,14 +53,20 @@ const updateLastSync = async (lastSync) => {
   );
 };
 
-const fetchChanges = async (connection, since) => {
+const fetchChanges = async (connection, since, initialTime) => {
   const result = await connection.execute(
     `SELECT ROWID AS ORACLE_ROWID, t.*
      FROM hmall.od_order_subsidy t
-     WHERE t.MODIFY_DATE >= :since
-     ORDER BY t.MODIFY_DATE ASC`,
-    { since },
-    { 
+     WHERE (t.INSERT_DATE >= :since
+        OR t.MODIFY_DATE >= :since)
+       AND t.INSERT_DATE > :initialTime
+       AND t.MODIFY_DATE > t.INSERT_DATE
+     ORDER BY GREATEST(t.INSERT_DATE, t.MODIFY_DATE) ASC`,
+    {
+      since,
+      initialTime
+    },
+    {
       outFormat: oracle.oracledb.OUT_FORMAT_OBJECT,
       resultSet: true // 使用 ResultSet 以支持流式/分批读取
     }
@@ -70,7 +76,12 @@ const fetchChanges = async (connection, since) => {
 
 const upsertRow = async (row) => {
   const rowId = row.ORACLE_ROWID;
+  // 优先使用 MODIFY_DATE 作为同步时间，如果没有则使用 INSERT_DATE
+  const insertDate = row.INSERT_DATE ? new Date(row.INSERT_DATE) : null;
   const modifyDate = row.MODIFY_DATE ? new Date(row.MODIFY_DATE) : null;
+  // 优先使用 MODIFY_DATE，如果不存在则使用 INSERT_DATE
+  const syncDate = modifyDate || insertDate;
+
   await db.query(
     `INSERT INTO od_order_subsidy_sync (oracle_rowid, modify_date, data, synced_at)
      VALUES ($1, $2, $3, NOW())
@@ -78,8 +89,9 @@ const upsertRow = async (row) => {
      SET modify_date = EXCLUDED.modify_date,
          data = EXCLUDED.data,
          synced_at = NOW()`,
-    [rowId, modifyDate, JSON.stringify(row)]
+    [rowId, syncDate, JSON.stringify(row)]
   );
+  return { insertDate, modifyDate, syncDate };
 };
 
 const runSync = async () => {
@@ -105,9 +117,10 @@ const runSync = async () => {
     }
 
     connection = await pool.getConnection();
-    resultSet = await fetchChanges(connection, since);
+    const initialTime = resolveInitialSyncTime();
+    resultSet = await fetchChanges(connection, since, initialTime);
 
-    let maxModifyDate = lastSync;
+    let maxSyncDate = lastSync;
     let totalSynced = 0;
     let batch;
     const BATCH_SIZE = 1000;
@@ -118,11 +131,11 @@ const runSync = async () => {
         if (!row.ORACLE_ROWID) {
           continue;
         }
-        await upsertRow(row);
-        if (row.MODIFY_DATE) {
-          const current = new Date(row.MODIFY_DATE);
-          if (!Number.isNaN(current.getTime()) && current > maxModifyDate) {
-            maxModifyDate = current;
+        const dates = await upsertRow(row);
+        // 同时考虑 INSERT_DATE 和 MODIFY_DATE，取最大值作为同步进度
+        if (dates.syncDate && !Number.isNaN(dates.syncDate.getTime())) {
+          if (dates.syncDate > maxSyncDate) {
+            maxSyncDate = dates.syncDate;
           }
         }
       }
@@ -130,9 +143,9 @@ const runSync = async () => {
       logger.info(`Synced ${batch.length} rows (Total: ${totalSynced})`);
     }
 
-    if (totalSynced > 0 && maxModifyDate > lastSync) {
-      await updateLastSync(maxModifyDate);
-      logger.info(`Oracle sync completed. Total synced: ${totalSynced}, New LastSync: ${maxModifyDate.toISOString()}`);
+    if (totalSynced > 0 && maxSyncDate > lastSync) {
+      await updateLastSync(maxSyncDate);
+      logger.info(`Oracle sync completed. Total synced: ${totalSynced}, New LastSync: ${maxSyncDate.toISOString()}`);
     } else {
       logger.info('Oracle sync completed. No new data.');
     }

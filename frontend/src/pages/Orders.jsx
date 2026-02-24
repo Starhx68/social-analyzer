@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Input, Select, Tag, Space, DatePicker, Row, Col, Form, Modal, List, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Table, Card, Button, Input, Select, Tag, Space, DatePicker, Form, Modal, List, message } from 'antd';
 import { SearchOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
@@ -103,9 +103,9 @@ const Orders = () => {
       setParams(prev => ({ ...prev, status, page: 1 }));
       form.setFieldsValue({ status });
     }
-  }, [searchParams]);
+  }, [searchParams, params.status, form]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/orders', { params });
@@ -116,11 +116,11 @@ const Orders = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
 
   useEffect(() => {
     fetchOrders();
-  }, [params]);
+  }, [fetchOrders]);
 
   const columns = [
     {

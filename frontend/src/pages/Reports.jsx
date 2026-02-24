@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Tag, Space, message, Tabs, Form, Input, Select } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Table, Card, Button, Tag, message, Form, Input, Select } from 'antd';
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import api from '../services/api';
 import dayjs from 'dayjs';
@@ -16,11 +16,7 @@ const Reports = () => {
     orderId: undefined
   });
 
-  useEffect(() => {
-    fetchLogs();
-  }, [params]);
-
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/reports/logs', { params });
@@ -31,7 +27,11 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   const handleRetry = async (record) => {
     try {

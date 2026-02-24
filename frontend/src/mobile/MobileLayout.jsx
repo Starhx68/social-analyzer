@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { TabBar } from 'antd-mobile';
-import { AppOutline, UserOutline } from 'antd-mobile-icons';
+import { AppOutline } from 'antd-mobile-icons';
 
 const MobileLayout = () => {
   const navigate = useNavigate();

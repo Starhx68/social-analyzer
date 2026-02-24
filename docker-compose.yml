@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # PostgreSQL 数据库
   postgres:
-    image: postgres:14-alpine
+    image: postgres:15-alpine
     container_name: guobu-postgres
     restart: always
     environment:
@@ -29,8 +29,10 @@ services:
     image: redis:7-alpine
     container_name: guobu-redis
     restart: always
+    # 增加密码验证
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -50,13 +52,14 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-Guobu@Minio2025}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      # 修正端口映射：主机9090 -> 容器9000 (API)
+      - "9090:9000"
+      - "9091:9091"
     volumes:
-      - minio_data:/data
+      - ./minio_storage:/data
     networks:
       - guobu-network
-    command: server /data --console-address ":9001"
+    command: server /data --console-address ":9091"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -65,6 +68,7 @@ services:
 
   # 后端服务
   backend:
+    image: guobu-backend:latest
     build: 
       context: ./backend
       dockerfile: Dockerfile
@@ -75,19 +79,21 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      # Database connection (Overrides .env to use internal docker network)
+      # Database connection
       - DATABASE_URL=postgresql://guobu:${DB_PASSWORD:-Guobu@2025}@postgres:5432/guobu
       # Redis connection
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       # MinIO connection
       - MINIO_ENDPOINT=minio
+      # 内部通信使用容器端口 9000
       - MINIO_PORT=9000
       - MINIO_USE_SSL=false
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-admin}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-Guobu@Minio2025}
       - MINIO_BUCKET=guobu
-      # Oracle Config (Pass-through if needed, but env_file handles it)
+      # Oracle Config
       - ORACLE_USER=${ORACLE_USER}
       - ORACLE_PASSWORD=${ORACLE_PASSWORD}
       - ORACLE_CONNECT_STRING=${ORACLE_CONNECT_STRING}
@@ -116,6 +122,9 @@ services:
       - backend
     networks:
       - guobu-network
+    dns:
+      - 8.8.8.8
+      - 114.114.114.114
 
 networks:
   guobu-network:

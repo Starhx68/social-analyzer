@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Upload, Button, App, Row, Col, Image, Divider, Spin, Typography, Alert, Tag, Input, Timeline, Empty, Modal } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, Upload, Button, App, Row, Col, Image, Spin, Typography, Alert, Tag, Input, Timeline, Empty, Modal } from 'antd';
 import { UploadOutlined, DeleteOutlined, FileImageOutlined, ScanOutlined, HistoryOutlined } from '@ant-design/icons';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -15,7 +15,7 @@ const getMaterialTypes = (plateType) => {
     home_appliance: [
       { key: 'delivery_note', label: '送货单照片', required: true, maxCount: 1 }, // image1
       { key: 'sn_photo', label: 'SN码水印照片', required: true, maxCount: 1 }, // image2
-      { key: 'energy_label', label: '能效标识水印照片', required: false, maxCount: 1 }, // image3
+      { key: 'energy_label', label: '能效标识水印照片', required: true, maxCount: 1 }, // image3
       { key: 'receipt', label: '销售清单或购物小票照片', required: false, maxCount: 1 }, // image4
       { key: 'product_photo', label: '实物照片', required: false, maxCount: 1 }, // image5
     ],
@@ -55,48 +55,17 @@ const MaterialsUpload = () => {
   const orderId = searchParams.get('orderId');
   const navigate = useNavigate();
   
-  const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState(null);
   const [materials, setMaterials] = useState([]);
   const [uploading, setUploading] = useState({});
   const [snCode, setSnCode] = useState('');
   const [imei1, setImei1] = useState('');
   const [imei2, setImei2] = useState('');
-  const [ocrLoading, setOcrLoading] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!orderId) {
-      // message.error('缺少订单ID');
-      // navigate('/orders');
-      return;
-    }
-    fetchOrderDetails();
-    fetchMaterials();
-    fetchAuditLogs();
-  }, [orderId]);
-
-  if (!orderId) {
-    return (
-      <Card>
-        <Alert
-          message="缺少订单ID"
-          description="请从订单管理页面选择需要上传资料的订单。"
-          type="warning"
-          showIcon
-          action={
-            <Button type="primary" onClick={() => navigate('/orders')}>
-              前往订单管理
-            </Button>
-          }
-        />
-      </Card>
-    );
-  }
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       const res = await api.get(`/orders/${orderId}`);
       setOrder(res.data);
@@ -107,7 +76,37 @@ const MaterialsUpload = () => {
       console.error('获取订单详情失败', error);
       message.error('获取订单详情失败');
     }
-  };
+  }, [orderId, message]);
+
+  const fetchMaterials = useCallback(async () => {
+    try {
+      const res = await api.get(`/materials/order/${orderId}`);
+      setMaterials(res.data);
+    } catch (error) {
+      console.error('获取资料列表失败', error);
+    }
+  }, [orderId]);
+
+  const fetchAuditLogs = useCallback(async () => {
+    try {
+      setLogsLoading(true);
+      const logs = await orderApi.getAuditLogs(orderId);
+      setAuditLogs(logs);
+    } catch (error) {
+      console.error('获取审核记录失败', error);
+    } finally {
+      setLogsLoading(false);
+    }
+  }, [orderId]);
+
+  useEffect(() => {
+    if (!orderId) {
+      return;
+    }
+    fetchOrderDetails();
+    fetchMaterials();
+    fetchAuditLogs();
+  }, [orderId, fetchOrderDetails, fetchMaterials, fetchAuditLogs]);
 
   const saveSnCode = async (code) => {
     if (!code) return true;
@@ -175,7 +174,7 @@ const MaterialsUpload = () => {
     const missingConfigs = requiredConfigs.filter(c => !materials.some(m => m.material_type === c.key));
     const needSn = requiredConfigs.some(c => c.key === 'sn_photo');
     const snVal = snCode || order?.sn_code || imei1 || order?.imei1; // Check existing values
-    
+
     if (missingConfigs.length || (needSn && !snVal)) {
       const items = [...missingConfigs.map(c => c.label)];
       if (needSn && !snVal) items.push('SN码或IMEI码');
@@ -222,26 +221,23 @@ const MaterialsUpload = () => {
     });
   };
 
-  const fetchMaterials = async () => {
-    try {
-      const res = await api.get(`/materials/order/${orderId}`);
-      setMaterials(res.data);
-    } catch (error) {
-      console.error('获取资料列表失败', error);
-    }
-  };
-
-  const fetchAuditLogs = async () => {
-    try {
-      setLogsLoading(true);
-      const logs = await orderApi.getAuditLogs(orderId);
-      setAuditLogs(logs);
-    } catch (error) {
-      console.error('获取审核记录失败', error);
-    } finally {
-      setLogsLoading(false);
-    }
-  };
+  if (!orderId) {
+    return (
+      <Card>
+        <Alert
+          message="缺少订单ID"
+          description="请从订单管理页面选择需要上传资料的订单。"
+          type="warning"
+          showIcon
+          action={
+            <Button type="primary" onClick={() => navigate('/orders')}>
+              前往订单管理
+            </Button>
+          }
+        />
+      </Card>
+    );
+  }
 
   const handleUpload = async ({ file, materialType, imageIndex = 0 }) => {
     const formData = new FormData();
@@ -261,7 +257,6 @@ const MaterialsUpload = () => {
       // 如果是SN码照片，尝试进行OCR识别
       if (materialType === 'sn_photo') {
         try {
-          setOcrLoading(true);
           message.loading({ content: '正在进行OCR识别...', key: 'ocr' });
           const ocrRes = await api.post(`/ocr/materials/${res.data.material.id}/process`, {
             ocrType: 'sn'
@@ -276,12 +271,9 @@ const MaterialsUpload = () => {
         } catch (ocrError) {
           console.error('OCR识别失败', ocrError);
           message.warning({ content: 'OCR识别失败，请手动输入', key: 'ocr' });
-        } finally {
-          setOcrLoading(false);
         }
       } else if (materialType === 'imei_photo') {
         try {
-          setOcrLoading(true);
           message.loading({ content: '正在进行IMEI识别...', key: 'ocr' });
           const ocrRes = await api.post(`/ocr/materials/${res.data.material.id}/process`, {
             ocrType: 'imei'
@@ -311,8 +303,6 @@ const MaterialsUpload = () => {
         } catch (ocrError) {
           console.error('IMEI识别失败', ocrError);
           message.warning({ content: 'IMEI识别失败，请手动输入', key: 'ocr' });
-        } finally {
-          setOcrLoading(false);
         }
       }
       

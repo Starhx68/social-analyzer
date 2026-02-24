@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Orders from './pages/Orders'
 import OrderDetail from './pages/OrderDetail'
 import MaterialsUpload from './pages/MaterialsUpload'
+import SnCheck from './pages/SnCheck'
 import Audit from './pages/Audit'
 import Reports from './pages/Reports'
 import Organizations from './pages/Organizations'
@@ -15,6 +16,7 @@ import MobileLayout from './mobile/MobileLayout'
 import MobileLogin from './mobile/pages/Login'
 import MobileHome from './mobile/pages/Home'
 import MobileUpload from './mobile/pages/Upload'
+import MobileSnCheck from './mobile/pages/SnCheck'
 
 const { Content } = Layout
 
@@ -50,6 +52,7 @@ function App() {
                     <Route index element={<Navigate to="/mobile/home" replace />} />
                     <Route path="home" element={<MobileHome />} />
                     <Route path="upload/:id" element={<MobileUpload />} />
+                    <Route path="sn-check" element={<MobileSnCheck />} />
                   </Route>
                 </Route>
 
@@ -63,6 +66,7 @@ function App() {
                     <Route path="orders" element={<Orders />} />
                     <Route path="orders/:id" element={<OrderDetail />} />
                     <Route path="upload" element={<MaterialsUpload />} />
+                    <Route path="sn-check" element={<SnCheck />} />
                     <Route path="audit" element={<Audit />} />
                     <Route path="reports" element={<Reports />} />
                     <Route path="organizations" element={<Organizations />} />

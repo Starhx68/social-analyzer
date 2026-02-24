@@ -6,7 +6,7 @@ import {
   MenuUnfoldOutlined,
   DashboardOutlined,
   ShoppingOutlined,
-  CloudUploadOutlined,
+  ScanOutlined,
   AuditOutlined,
   BarChartOutlined,
   TeamOutlined,
@@ -63,6 +63,11 @@ const MainLayout = () => {
       key: '/orders',
       icon: <ShoppingOutlined />,
       label: '订单管理',
+    },
+    {
+      key: '/sn-check',
+      icon: <ScanOutlined />,
+      label: 'SN查询锁定',
     },
     {
       key: '/audit',

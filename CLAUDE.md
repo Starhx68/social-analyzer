@@ -20,3 +20,4 @@
 
 ## 历史决策记录
 - 2025-12-30: 初始化项目，开始编写需求文档。
+- 2026-02-12: Oracle 同步条件由 MODIFY_DATE 改为 INSERT_DATE；前端生产构建关闭 sourcemap；Nginx 增加安全响应头（X-Frame-Options、X-Content-Type-Options、Referrer-Policy）。

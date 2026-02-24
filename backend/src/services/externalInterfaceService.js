@@ -5,7 +5,6 @@ const schedule = require('node-schedule');
 const axios = require('axios');
 const Minio = require('minio');
 const config = require('../config');
-const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
 
 const minioClient = new Minio.Client({
@@ -556,6 +555,208 @@ class ExternalInterfaceService {
         }
       }
     });
+  }
+
+  /**
+   * SN 查询接口
+   * @param {string} orderNo 订单号
+   * @param {string} sn SN 码
+   */
+  static async querySn(orderNo, sn) {
+    try {
+      logger.info(`Querying SN: orderNo=${orderNo}, sn=${sn}`);
+
+      const response = await WebServiceUtils.querySn({ homa_order_no: orderNo, sn });
+      const result = response.parsed.Program;
+
+      // 处理响应
+      let status = 'failure';
+      let errorMessage = null;
+      let sellState = null;
+      let message = null;
+
+      // 检查 ErrorNo 和 flag
+      if (result.ErrorNo === '1') {
+        status = 'success';
+        sellState = result.parameters?.flag || 'unknown';
+
+        // 检查返回的 flag 字段：success=可售, fail=不可售/失败
+        if (sellState === 'success' || sellState === '1') {
+          message = '可售';
+        } else if (sellState === 'fail' || sellState === '0') {
+          message = result.return_info?.row1?.rtn_msg || '不可售';
+        } else {
+          message = '未查询到相关信息';
+        }
+
+        logger.info(`SN Query success: orderNo=${orderNo}, sn=${sn}, sellState=${sellState}`);
+      } else {
+        errorMessage = result.ErrorMessage || result.return_info?.row1?.rtn_msg || 'Unknown error';
+        logger.warn(`SN Query failed: orderNo=${orderNo}, sn=${sn}, error=${errorMessage}`);
+      }
+
+      // 记录日志
+      await this.logInterfaceCall({
+        interface_type: 'sn_query',
+        order_id: null,
+        crm_order_no: orderNo,
+        request_params: response.requestXml,
+        response_data: response.raw,
+        status: status,
+        error_message: errorMessage
+      });
+
+      return {
+        success: status === 'success',
+        sellState,
+        message,
+        data: result.return_info?.row1 || {}
+      };
+
+    } catch (error) {
+      logger.error(`Error in querySn for orderNo=${orderNo}, sn=${sn}:`, error);
+
+      // 记录异常日志
+      try {
+        await this.logInterfaceCall({
+          interface_type: 'sn_query',
+          order_id: null,
+          crm_order_no: orderNo,
+          request_params: `orderNo=${orderNo}, sn=${sn}`,
+          response_data: '',
+          status: 'failure',
+          error_message: error.message
+        });
+      } catch (logError) {
+        console.error('Failed to log error:', logError);
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * SN 锁定接口
+   * @param {string} userId 用户ID
+   * @param {string} orderNo 订单号
+   * @param {string} sn SN 码
+   * @param {File} imageFile 图片文件 (可选)
+   */
+  static async lockSn(userId, orderNo, sn, imageFile = null) {
+    let order;
+    try {
+      // 1. 前置检查：确认订单是否存在
+      const orderResult = await db.query(
+        `SELECT id, mchnt_ord_no, crm_order_no, sn_code
+         FROM orders WHERE mchnt_ord_no = $1 OR crm_order_no = $2`,
+        [orderNo, orderNo]
+      );
+
+      if (orderResult.rows.length === 0) {
+        throw new Error(`Order not found: ${orderNo}`);
+      }
+
+      order = orderResult.rows[0];
+
+      // 2. 调用锁定接口
+      const response = await WebServiceUtils.lockSn({ homa_order_no: orderNo, sn });
+      const result = response.parsed.Program;
+      const flag = result.parameters?.flag;
+
+      // 3. 处理结果
+      let status = 'failure';
+      let errorMessage = null;
+
+      if (flag === 'success' || flag === '1') {
+        status = 'success';
+        logger.info(`SN Lock success: orderNo=${orderNo}, sn=${sn}`);
+
+        // 更新订单 SN 码
+        await db.query(
+          `UPDATE orders SET sn_code = $1, updated_at = NOW() WHERE id = $2`,
+          [sn, order.id]
+        );
+
+        // 处理图片上传 - 使用 materials 表
+        if (imageFile) {
+          try {
+            // 从预处理后的文件中获取信息（如果有的话）
+            const buffer = imageFile.buffer;
+            const fileExtension = imageFile.extension || 'jpg';
+            const fileMimeType = imageFile.mimetype || 'image/jpeg';
+            const fileSize = buffer.length;
+
+            // 上传图片到 MinIO
+            const fileName = `sn_lock_${orderNo}_${Date.now()}.${fileExtension}`;
+            await minioClient.putObject(
+              config.minio.bucket,
+              fileName,
+              buffer,
+              {
+                'Content-Type': fileMimeType,
+                'Content-Length': fileSize.toString()
+              }
+            );
+
+            const fileUrl = `${config.minio.useSSL ? 'https' : 'http'}://${config.minio.endpoint}:${config.minio.port}/${config.minio.bucket}/${fileName}`;
+
+            // 保存到 materials 表，使用 sn_lock_photo 类型
+            await db.query(
+              `INSERT INTO materials (order_id, material_type, image_index, file_url, file_name, file_size, file_format, uploaded_by)
+               VALUES ($1, 'sn_lock_photo', 0, $2, $3, $4, $5, $6)
+               ON CONFLICT (order_id, material_type, image_index)
+               DO UPDATE SET file_url = $2, file_name = $3, file_size = $4, uploaded_at = NOW()`,
+              [order.id, fileUrl, fileName, fileSize, fileExtension, userId]
+            );
+
+            logger.info(`SN Lock Image uploaded: ${fileUrl}, size: ${fileSize}`);
+          } catch (imgError) {
+            logger.error(`Failed to upload SN lock image:`, imgError);
+          }
+        }
+      } else {
+        errorMessage = result.ErrorMessage || result.return_info?.row1?.rtn_msg || 'Unknown error';
+        logger.warn(`SN Lock failed: orderNo=${orderNo}, error=${errorMessage}`);
+      }
+
+      // 记录日志
+      await this.logInterfaceCall({
+        interface_type: 'sn_lock',
+        order_id: order.id,
+        crm_order_no: orderNo,
+        request_params: response.requestXml,
+        response_data: response.raw,
+        status: status,
+        error_message: errorMessage
+      });
+
+      return {
+        success: status === 'success',
+        message: status === 'success' ? '锁定成功' : errorMessage
+      };
+
+    } catch (error) {
+      logger.error(`Error in lockSn for orderNo=${orderNo}:`, error);
+
+      // 记录异常日志
+      if (order) {
+        try {
+          await this.logInterfaceCall({
+            interface_type: 'sn_lock',
+            order_id: order.id,
+            crm_order_no: orderNo,
+            request_params: '',
+            response_data: '',
+            status: 'failure',
+            error_message: error.message
+          });
+        } catch (logError) {
+          console.error('Failed to log error:', logError);
+        }
+      }
+
+      throw error;
+    }
   }
 }
 

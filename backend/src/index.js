@@ -26,6 +26,7 @@ app.use('/api/organizations', require('./routes/organizations'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/materials', require('./routes/materials'));
 app.use('/api/ocr', require('./routes/ocr'));
+app.use('/api/sn', require('./routes/sn'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/interface-logs', require('./routes/interfaceLogs'));
 

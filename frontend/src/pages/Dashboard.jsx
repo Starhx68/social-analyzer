@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag } from 'antd';
 import { 
   ShoppingOutlined, 
-  AuditOutlined, 
   CheckCircleOutlined, 
   CloseCircleOutlined,
-  CloudUploadOutlined 
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -57,12 +55,6 @@ const Dashboard = () => {
       title: '商品',
       dataIndex: 'product_name',
       key: 'product_name',
-    },
-    {
-      title: '实付金额',
-      dataIndex: 'product_total_amount',
-      key: 'product_total_amount',
-      render: val => `¥${val}`
     },
     {
       title: '状态',

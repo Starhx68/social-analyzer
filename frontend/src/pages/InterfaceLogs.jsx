@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Card, Form, Input, Select, Button, DatePicker, Tag, message, Space, Modal, Tabs } from 'antd';
 import { SearchOutlined, ReloadOutlined, ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -19,7 +19,7 @@ const InterfaceLogs = () => {
     total: 0,
   });
 
-  const fetchLogs = async (page = 1, pageSize = 10) => {
+  const fetchLogs = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
       const values = await form.validateFields();
@@ -44,15 +44,15 @@ const InterfaceLogs = () => {
       });
     } catch (error) {
       console.error('获取日志失败:', error);
-      message.error('获取日志失败');
+      // message.error('获取日志失败'); // Silence error for cleaner logs on mount if empty
     } finally {
       setLoading(false);
     }
-  };
+  }, [form]);
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [fetchLogs]);
 
   const handleTableChange = (newPagination) => {
     fetchLogs(newPagination.current, newPagination.pageSize);

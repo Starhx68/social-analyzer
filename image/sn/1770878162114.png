@@ -1,0 +1,95 @@
+<!-- -------------------------------SN查询报文及返回示例=============== -->
+ <!--Action 锁定是 lock ,解锁是unlock 其他参数都一样-->
+ <!-- 返回 success 0是失败, 1是成功, message是具体原因-->
+
+
+ <!-- 查询SN状态示例 -->
+<?xml version="1.0" encoding="GB18030"?>
+<Program>
+    <appid>80</appid>
+    <FunctionID>HG960828</FunctionID>
+    <Action>query</Action> 
+    <parameters>
+        <sn>258024000953101103230100244</sn>
+        <homa_order_no>25110237585055</homa_order_no>
+    </parameters>
+    <addition-xml>
+        <row1>
+            <add1>APPUser</add1>
+            <add2>107898</add2>
+            <add3>10.10.1.999</add3>
+            <add4>1A682300CCE8D608ABProd</add4>
+        </row1>
+    </addition-xml>
+</Program>
+
+
+ <!-- 查询SN状态结果返回，success=0是失败, 1是成功, message是具体原因-->
+-----------------------------------------------------------------------------------
+<Program>
+    <ErrorNo>1</ErrorNo>
+    <UIMessage>ok</UIMessage>
+    <ErrorMessage></ErrorMessage>
+    <ErrorType>0</ErrorType>
+    <parameters>
+        <success>0</success>
+        <log_session_id>APP0120260212093218134_1</log_session_id>
+        <message>当前厂商社会信用代码[9144030027939873X711]未配置</message>
+        <respCode>030001</respCode>
+    </parameters>
+</Program>
+
+
+<Program>
+    <ErrorNo>1</ErrorNo>
+    <UIMessage>ok</UIMessage>
+    <ErrorMessage></ErrorMessage>
+    <ErrorType>0</ErrorType>
+    <parameters>
+        <success>1</success>
+        <sellState>U0022</sellState>
+        <log_session_id>APP0120260212093306217_1</log_session_id>
+        <message>国家平台响应码&lt;T0022&gt;响应描述&lt;本设备符合补贴条件&gt;</message>
+        <respCode>000000</respCode>
+        <sellStateDesc>可售</sellStateDesc>
+    </parameters>
+</Program>
+
+
+
+<Program>
+    <ErrorNo>1</ErrorNo>
+    <UIMessage>ok</UIMessage>
+    <ErrorMessage></ErrorMessage>
+    <ErrorType>0</ErrorType>
+    <parameters>
+        <success>0</success>
+        <sellState>U0024</sellState>
+        <log_session_id>APP0120260212092948097_1</log_session_id>
+        <message>国家平台响应码&lt;T0024&gt;响应描述&lt;未查到相关信息&gt;</message>
+		<respCode>000000</respCode>
+        <sellStateDesc>未查到相关信息</sellStateDesc>
+    </parameters>
+</Program>
+
+--------------------------------------------------------------------------------------------------------------
+
+ <!-- 锁定SN示例 -->
+<?xml version="1.0" encoding="GB18030"?>
+<Program>
+    <appid>80</appid>
+    <FunctionID>HG960828</FunctionID>
+    <Action>lock</Action> 
+    <parameters>
+        <sn>258024000953101103230100244</sn>
+        <homa_order_no>25110237585055</homa_order_no>
+    </parameters>
+    <addition-xml>
+        <row1>
+            <add1>APPUser</add1>
+            <add2>107898</add2>
+            <add3>10.10.1.999</add3>
+            <add4>1A682300CCE8D608ABProd</add4>
+        </row1>
+    </addition-xml>
+</Program>

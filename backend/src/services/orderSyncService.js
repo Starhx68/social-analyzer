@@ -33,12 +33,17 @@ class OrderSyncService {
         }
       }
 
+      // 判断订单类型：HM30 表示退货单，其他为正常订单
+      const orderGb = data.ORDER_GB || data.PLATE_TYPE || data.PC_TP;
+      const orderType = (orderGb === 'HM30') ? 'return' : 'normal';
+
       // 从 Oracle 数据中提取字段（根据实际字段名映射）
       const parsed = {
         oracle_rowid: data.ORACLE_ROWID,
         external_order_id: data.ORDER_NO || data.ORD_NO || data.ORDER_ID || data.HOMA_ORDER_NO,
         mchnt_ord_no: data.MCHNT_ORD_NO || data.HOMA_ORDER_NO || data.ORDER_NO || data.ORD_NO,
         crm_order_no: data.CRM_ORDER_NO,
+        order_type: orderType,
 
         // 板块类型
         plate_type: this.getPlateTypeFromAttr(data) || this.mapPlateType(data.PLATE_TYPE || data.PC_TP || data.ORDER_GB),
@@ -48,7 +53,7 @@ class OrderSyncService {
         product_model: data.GOODS_MODEL || data.PRODUCT_MODEL || this.getProductModelFromAttr(data),
         product_brand: data.BRAND_NAME || data.GOODS_BRND || data.PRODUCT_BRAND || this.getProductBrandFromAttr(data),
         product_category: data.CATEGORY_NAME || this.getProductNameFromAttr(data),
-        product_category_code: data.CATEGORY_CODE,
+        product_category_code: this.getPlbmFromAttr(data) || data.CATEGORY_CODE,
         pc_tp: data.PC_TP,
 
         // 发票信息
@@ -183,16 +188,11 @@ class OrderSyncService {
         : rawSyncRecord.data;
       const parsed = this.parseOracleData(data);
 
-      // 检查是否已存在
-      // 优先使用 external_order_id (Oracle ORDER_NO) 作为唯一标识
+      // 检查是否已存在（使用复合唯一约束：order_type + mchnt_ord_no）
       let existingResult = await client.query(
-        'SELECT * FROM order_sync WHERE external_order_id = $1',
-        [parsed.external_order_id]
+        'SELECT * FROM order_sync WHERE (external_order_id = $1 OR mchnt_ord_no = $2) AND order_type = $3',
+        [parsed.external_order_id, parsed.mchnt_ord_no, parsed.order_type]
       );
-
-      // 如果按 external_order_id 未找到，且存在 mchnt_ord_no，尝试兜底查找 (但在退货场景下可能导致错误的合并，需谨慎)
-      // 在当前场景下（退货单与原单共享 mchnt_ord_no），不应使用 mchnt_ord_no 进行匹配
-      // 因此只使用 external_order_id
 
       if (existingResult.rows.length === 0) {
         const result = await client.query(`
@@ -201,6 +201,7 @@ class OrderSyncService {
             external_order_id,
             mchnt_ord_no,
             crm_order_no,
+            order_type,
             plate_type,
             product_name,
             product_model,
@@ -241,13 +242,14 @@ class OrderSyncService {
             extra_info,
             external_created_at,
             external_updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44)
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45)
           RETURNING *
         `, [
           parsed.oracle_rowid,
           parsed.external_order_id,
           parsed.mchnt_ord_no,
           parsed.crm_order_no,
+          parsed.order_type,
           parsed.plate_type,
           parsed.product_name,
           parsed.product_model,
@@ -318,9 +320,10 @@ class OrderSyncService {
               product_total_amount = $14,
               subsidy_amount = $15,
               crm_order_no = $16,
+              order_type = $17,
               sync_status = 'pending',
               updated_at = NOW()
-            WHERE id = $17
+            WHERE id = $18
             RETURNING *
           `, [
             parsed.external_updated_at,
@@ -339,6 +342,7 @@ class OrderSyncService {
             parsed.product_total_amount,
             parsed.subsidy_amount,
             parsed.crm_order_no,
+            parsed.order_type,
             existing.id,
           ]);
 
@@ -386,8 +390,11 @@ class OrderSyncService {
               invoice_date = $10,
               product_total_amount = $11,
               crm_order_no = $12,
+              imei1 = $13,
+              imei2 = $14,
+              order_type = $15,
               updated_at = NOW()
-          WHERE id = $13
+          WHERE id = $16
         `, [
           syncRecord.plate_type,
           syncRecord.product_name,
@@ -401,6 +408,9 @@ class OrderSyncService {
           syncRecord.invoice_date,
           syncRecord.product_total_amount,
           syncRecord.crm_order_no,
+          syncRecord.imei1,
+          syncRecord.imei2,
+          syncRecord.order_type,
           syncRecord.order_id
         ]);
 
@@ -461,8 +471,11 @@ class OrderSyncService {
           invoice_amount,
           invoice_date,
           crm_order_no,
+          imei1,
+          imei2,
+          order_type,
           status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'pending')
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, 'pending')
         RETURNING id
       `, [
         syncRecord.id,
@@ -480,6 +493,9 @@ class OrderSyncService {
         syncRecord.invoice_amount,
         syncRecord.invoice_date,
         syncRecord.crm_order_no,
+        syncRecord.imei1,
+        syncRecord.imei2,
+        syncRecord.order_type
       ]);
 
       const orderId = orderResult.rows[0].id;
@@ -605,6 +621,21 @@ class OrderSyncService {
   }
 
   /**
+   * 从 GOODS_ATTRIBUTE 解析产品品类编码 (plbm)
+   */
+  getPlbmFromAttr(data) {
+    try {
+      if (!data.GOODS_ATTRIBUTE) return null;
+      const attr = typeof data.GOODS_ATTRIBUTE === 'string' 
+        ? JSON.parse(data.GOODS_ATTRIBUTE) 
+        : data.GOODS_ATTRIBUTE;
+      return attr.plbm || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
    * 从 GOODS_ATTRIBUTE 解析板块类型
    */
   getPlateTypeFromAttr(data) {
@@ -613,7 +644,21 @@ class OrderSyncService {
       const attr = typeof data.GOODS_ATTRIBUTE === 'string' 
         ? JSON.parse(data.GOODS_ATTRIBUTE) 
         : data.GOODS_ATTRIBUTE;
-      // xm: 项目/类型
+      
+      // 优先使用 plbm 判断
+      const plbm = attr.plbm;
+      if (plbm) {
+        // 家电: A01-A06
+        if (['A01', 'A02', 'A03', 'A04', 'A05', 'A06'].includes(plbm)) {
+          return 'home_appliance';
+        }
+        // 3C数码: B01-B03
+        if (['B01', 'B02', 'B03'].includes(plbm)) {
+          return 'digital_3c';
+        }
+      }
+
+      // xm: 项目/类型 (旧逻辑作为回退)
       const xm = attr.xm;
       if (!xm) return null;
 

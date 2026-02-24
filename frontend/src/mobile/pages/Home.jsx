@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { SearchBar, Card, Tag, Button, Toast, ErrorBlock, CapsuleTabs, Modal, Input, List } from 'antd-mobile';
+import { SearchBar, Card, Tag, Button, Toast, ErrorBlock, CapsuleTabs, Grid } from 'antd-mobile';
 import { useNavigate } from 'react-router-dom';
 import { getOrders } from '../../services/orderApi';
 import api from '../../services/api';
-import { RightOutline, ScanCodeOutline } from 'antd-mobile-icons';
+import { RightOutline, ScanCodeOutline, SearchOutline } from 'antd-mobile-icons';
 
 const Home = () => {
   const [orders, setOrders] = useState([]);
@@ -170,6 +170,26 @@ const Home = () => {
 
   return (
     <div style={{ padding: 12, background: '#f5f5f5', minHeight: '100vh' }}>
+      {/* 快捷功能入口 */}
+      <Card style={{ marginBottom: 12 }}>
+        <Grid columns={2} gap={12}>
+          <Grid.Item
+            onClick={() => navigate('/mobile/sn-check')}
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: 8,
+              padding: 16,
+              color: '#fff',
+              textAlign: 'center'
+            }}
+          >
+            <SearchOutline fontSize={32} />
+            <div style={{ fontSize: 14, marginTop: 8, fontWeight: 'bold' }}>SN查询锁定</div>
+            <div style={{ fontSize: 12, marginTop: 4, opacity: 0.8 }}>3C数码专用</div>
+          </Grid.Item>
+        </Grid>
+      </Card>
+
       <div style={{ background: '#fff', padding: 12, borderRadius: 8, marginBottom: 12, position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <a href="/manual/index.html" target="_blank" rel="noopener noreferrer" style={{ color: '#1677ff', fontSize: 14 }}>

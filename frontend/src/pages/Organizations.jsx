@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Card, Button, Input, Select, Tag, Space, Form, Modal, message } from 'antd';
 import { SearchOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
 import api from '../services/api';
@@ -21,11 +21,7 @@ const Organizations = () => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [params]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/organizations', { params });
@@ -36,7 +32,11 @@ const Organizations = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleEdit = (record) => {
     setEditingOrg(record);

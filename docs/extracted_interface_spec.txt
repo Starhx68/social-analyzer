@@ -1,0 +1,652 @@
+4.4. 补贴资格数据核销(2026版)
+4.5. 手机等数码产品购新和家电以旧换新交易数据
+4.4. 补贴资格数据核销(2026版)
+补贴资格数据核销（2026年活动数据报送），单个批次最大1条，如上送网络超时可进行重试，重复上送或其他校验错误将在响
+应errorData中提示。 处理异常的情况：响应码为021004时，整批可部分处理成功，部分处理失败，成功的不需要再次上送，对
+于失败或者重复的，根据订单号人工介入处理。
+4.4.1. 报文协议
+HTTP(S) + JSON
+4.4.2. 接口地址
+测试环境：https://test-api-open.chinaums.com/v1/market/subsidy/qualification/confirm-2026
+生产环境：https://open-yjhx.chinaums.com/v1/market/subsidy/qualification/confirm-2026
+4.4.3. 报文格式
+1. 请求
+{
+  "version":"2026",
+  "cateCode": "A01",
+  "certNo": "420100********1234",
+  "name": "周**",
+  "tel": "188****8176",
+  "province": "hubei",
+  "activityCode": "",
+  "model": "1",
+  "channel": "jingdong",
+  "reqTime": "2024-10-10 17:12:17:000",
+  "reqSsn": "4a3e3e7ce87142d98c8d40d24f6a55e5"
+}
+JSON
+{
+  "respCode": "000000",
+  "respDesc": "操作成功"
+}
+JSON
+银联商务
+版权所有
+HTTP报文头：
+参数名称
+参数说明
+参数类型
+是否必须
+备注
+Authorization
+认证内容
+字符串
+是
+请见认证流程章节
+URL参数：无
+POST参数：
+格式：JSON
+参数名称
+参数说
+明
+参数
+类型
+长
+度
+是
+否
+必
+须
+备注
+data
+核销数
+据
+json
+数组
+否
+银联商务
+版权所有
+cateCode
+品类编
+码
+字符
+串
+是
+参考附录-2026年活动品类编码
+certNo
+身份证
+号
+字符
+串
+是
+grade
+能效标
+识
+字符
+串
+否
+有此值必填（一级）
+name
+姓名
+字符
+串
+是
+operationTime
+交易完
+成或商
+品退回
+时间戳
+字符
+串
+是
+调用 System.currentTimeMillis 方法，服务器时区要求：
+UTC+8
+sales
+销售金
+额
+字符
+串
+是
+单位元。当状态为已退回，销售金额应为负数
+status
+品类状
+态
+字符
+串
+是
+0-已核销/1-已退回
+subsidy
+补贴金
+额
+字符
+串
+是
+单位元。当状态为已退回，补贴金额应为负数
+tel
+手机号
+字符
+串
+是
+addCode
+收货地
+区编码
+字符
+串
+是
+例如：110101 6位数字（参照中华人民共 和国民政部2023年中
+华人 民共和国县以上行政区划 代码
+https://www.mca.gov.cn/mzsj/xzqh/2023/202301xzqh.html）
+address
+收货地
+址
+字符
+串
+是
+例如：xx街道x x小区
+saleModels
+销售方
+式
+字符
+串
+是
+0-线上/1-线下
+brand
+家电品
+牌
+字符
+串
+是
+snCode
+SN码
+字符
+串
+是
+manufactCertCode
+生产厂
+商信用
+代码
+字符
+串
+否
+imei1
+IMEI1
+码
+字符
+串
+否
+通讯品类必传
+银联商务
+版权所有
+imei2
+IMEI2
+码
+字符
+串
+否
+通讯品类为双卡双待时必传
+corpName
+销售企
+业名称
+字符
+串
+是
+uniscid
+销售企
+业统一
+社会信
+息代码
+字符
+串
+是
+barcode
+商品条
+码
+字符
+串
+是
+13位或14位
+itemName
+商品名
+称
+字符
+串
+是
+specModel
+规格型
+号
+字符
+串
+是
+logisticsNo
+物流单
+号
+字符
+串
+是
+不超过 100 位
+deliveryTime
+签收时
+间
+字符
+串
+是
+（调用 System.currentTimeMillis 方法）, 服务器时区要求：
+UTC+8
+invoiceNo
+发票号
+字符
+串
+是
+不超过100位
+isAIProduct
+是否属
+于 AI
+产品
+字符
+串
+是
+0-是/1-否
+pcType
+电脑类
+型
+字符
+串
+否
+（0-台式/1-笔记本），当品类为电脑时必填
+orderNo
+交易订
+单号
+字符
+串
+是
+退货时传退货订单号，需要与SN锁定订单号一致
+originOrderNo
+原始订
+单号
+字符
+串
+否
+即核销时传的orderNo, 退货时必传
+saleChannel
+线上销
+售渠道
+字符
+串
+否
+淘宝、天猫、京东、拼多多、苏宁易购、国美、抖音、快手、小
+红书、得物、唯品会、微信视频号、美团、自定义（不超过 100
+位）
+acquirer
+收单机
+构名称
+字符
+串
+是
+paymentId
+支付机
+构支付
+编号
+字符
+串
+是
+银联商务
+版权所有
+oldThings
+交旧信
+息
+字符
+串
+是
+交旧（0-是/1-否）
+pickUp
+是否自
+提
+字符
+串
+是
+是否自提（0-是/1-否）
+province
+省份
+字符
+串
+是
+用以区分各个省份到补贴资格平台参数，传拼音，详见附录-省
+份代码
+activityCode
+补贴活
+动编码
+字符
+串
+否
+国补活动可不传
+channel
+活动子
+平台
+字符
+串
+否
+reqSsn
+核销批
+次流水
+号
+字符
+串
+是
+可以使用UUID生产随机序列号
+2. 响应
+格式：JSON
+参数名称
+参数说明
+参数类型
+长度
+是否必须
+备注
+errCode
+错误代码
+字符串
+4
+否
+参考附录:系统
+返回码。仅在
+respCode未返
+时需关注此字
+段
+errInfo
+错误说明
+字符串
+否
+仅在respCode
+未返时需关注
+此字段
+respCode
+应答码
+字符串
+是
+respDesc
+应答码描述
+字符串
+否
+errorData
+核销异常数据
+信息
+数组
+否
+seqId
+错误数据流水
+号
+字符串
+是
+returnMsg
+错误原因
+字符串
+是
+resTime
+响应时间
+字符串
+否
+格式yyyy-
+MM-dd
+HH:mm:ss
+4.4.4. 示例报文
+1. 请求
+银联商务
+版权所有
+2. 响应
+3. 应答码说明
+响应代码（respCode）
+响应描述（respDesc）
+000000
+操作成功
+001009
+非法参数
+012000
+部平台核销失败
+{
+  "data": [
+    {
+      "cateCode": "A01",
+      "certNo": "420100********1234",
+      "grade": "一级",
+      "name": "周**",
+      "operationTime": "1577808000000",
+      "sales": "1.00",
+      "status": "0",
+      "subsidy": "1.00",
+      "tel": "188****8176",
+      "city": "wuhan",
+      "county": "hongshan",
+      "addCode": "110101",
+      "address": "xx街道xx小区",
+      "saleModels": "0",
+      "brand": "",
+      "orderNo": "22222",
+      "originOrderNo": "111",
+      "saleChannel": "天猫",
+      "acquirer": "222",
+      "paymentId": "111",
+      "oldThings": "1",
+      "pickUp": "1"
+    }
+  ],
+  "province": "hubei",
+  "activityCode": "",
+  "channel": "jingdong",
+  "reqTime": "2024-10-10 17:12:17:000",
+  "reqSsn": "4a3e3e7ce87142d98c8d40d24f6a55e5"
+}
+JSON
+{
+  "respCode": "021001",
+  "respDesc": "核销数据异常，核销失败",
+  "errorData": [
+        {
+            "orderNo": "UT3340260I560134U7",
+            "returnMsg": "【资格记录】为【已核销】，不能核销"
+        }
+    ]
+}
+JSON
+银联商务
+版权所有
+021001
+资格平台核销校验失败
+4.5. 手机等数码产品购新和家电以旧换新交易数据
+手机等数码产品购新和家电以旧换新交易数据接口实时上送，每次单条。
+4.5.1. 报文协议
+HTTP(S) + JSON
+4.5.2. 接口地址
+测试环境：https://test-api-open.chinaums.com/v1/market/subsidy/qualification/upload-trans-2026
+生产环境：https://open-yjhx.chinaums.com/v1/market/subsidy/qualification/upload-trans-2026
+4.5.3. 报文格式
+1. 请求
+HTTP报文头：
+参数名称
+参数说明
+参数类型
+是否必须
+备注
+Authorization
+认证内容
+字符串
+是
+请见认证流程章节
+URL参数：无
+POST参数：
+格式：JSON
+参数名称
+参数说明
+参数类型
+长度
+是否必须
+备注
+activityCode
+补贴活动编
+码
+字符串
+32
+否
+国补活动可不传
+channel
+活动子平台
+字符串
+20
+否
+province
+省份拼音
+字符串
+20
+是
+cateCode
+品类编码
+字符串
+32
+是
+参考附录-2025年活动品类
+编码
+certNo
+身份证号
+字符串
+20
+是
+name
+姓名
+字符串
+20
+是
+tel
+手机号
+字符串
+11
+是
+status
+品类状态
+字符串
+2
+是
+0-已核销/1-已退回
+grade
+能效标识
+字符串
+10
+否
+有此值必填（一级）
+operationTime
+交易完成或
+商品退回时
+间戳
+字符串
+是
+调用
+System.currentTimeMillis
+方法, 服务器时区要求：
+UTC+8
+银联商务
+版权所有
+sales
+销售金额
+字符串
+是
+单位元（当状态为已退回，
+销售金额应为负数）
+subsidy
+补贴金额
+字符串
+是
+单位元（当状态为已退回，
+补贴金额应为负数）
+saleModels
+销售方式
+字符串
+2
+是
+（0-线上/1-线下）
+brand
+品牌
+字符串
+200
+是
+corpName
+销售企业名
+称
+字符串
+100
+是
+uniscid
+销售企业统
+一社会信息
+代码
+字符串
+18
+是
+与营业执照上保持一致
+orderNo
+交易订单号
+字符串
+50
+是
+（退货时传退货订单号，需
+要与SN锁定/解锁订单号
+sellOrderId一致）
+originOrderNo
+原始订单号
+字符串
+50
+否
+（即核销时传的orderNo,
+退货时必传，需与解锁
+originPayOrderId一致）
+areaCode
+区域行政地
+区编码
+字符串
+否
+山东必传市级编码
+2. 响应
+格式：JSON
+参数名称
+参数说明
+参数类型
+长度
+是否必须
+备注
+errCode
+错误代码
+字符串
+4
+否
+参考附录:系统
+返回码。仅在
+respCode未返
+时需关注此字
+段
+errInfo
+错误说明
+字符串
+否
+仅在respCode
+未返时需关注
+此字段
+respCode
+应答码
+字符串
+是
+见下方应答码
+说明
+respDesc
+应答码描述
+字符串
+否
+3. 应答码说明
+响应代码（respCode）
+响应描述（respDesc）
+银联商务
+版权所有
+000000
+操作成功
+001009
+非法参数
+012000
+部平台交易上送失败
+4.5.4. 示例报文
+1. 请求
+2. 响应

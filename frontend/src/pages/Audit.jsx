@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Input, Select, Tag, Space, DatePicker, Form, Drawer, Descriptions, Image, Divider, Radio, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Table, Card, Button, Input, Select, Tag, Space, Form, Drawer, Descriptions, Image, Divider, Radio, message } from 'antd';
 import { SearchOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import api from '../services/api';
 import dayjs from 'dayjs';
 
-const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
 const Audit = () => {
@@ -23,11 +22,7 @@ const Audit = () => {
   const [auditForm] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [params]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/orders', { params });
@@ -38,7 +33,11 @@ const Audit = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const handleAuditClick = async (record) => {
     try {

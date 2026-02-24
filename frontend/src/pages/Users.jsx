@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Input, Select, Tag, Space, Form, Modal, message, Tooltip, Popconfirm, Row, Col } from 'antd';
-import { SearchOutlined, PlusOutlined, EditOutlined, KeyOutlined, DeleteOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Table, Card, Button, Input, Select, Tag, Space, Form, Modal, message, Row, Col } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import api from '../services/api';
 import dayjs from 'dayjs';
 
@@ -25,12 +25,7 @@ const Users = () => {
   const [submitting, setSubmitting] = useState(false);
   const [organizations, setOrganizations] = useState([]);
 
-  useEffect(() => {
-    fetchData();
-    fetchOrganizations();
-  }, [params]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('/users', { params });
@@ -41,16 +36,21 @@ const Users = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params]);
 
-  const fetchOrganizations = async () => {
+  const fetchOrganizations = useCallback(async () => {
     try {
       const res = await api.get('/organizations', { params: { limit: 100 } });
       setOrganizations(res.data.organizations);
     } catch (error) {
       console.error('获取组织列表失败', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    fetchOrganizations();
+  }, [fetchData, fetchOrganizations]);
 
   const handleEdit = (record) => {
     setEditingUser(record);

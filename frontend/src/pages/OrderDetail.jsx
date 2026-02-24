@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Descriptions, Tag, Image, Space, Button, Divider, Timeline, Spin, message, Row, Col, Modal } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, Descriptions, Tag, Image, Space, Button, Divider, Spin, message, Modal } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import api from '../services/api';
@@ -13,11 +13,7 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchOrderDetail();
-  }, [id]);
-
-  const fetchOrderDetail = async () => {
+  const fetchOrderDetail = useCallback(async () => {
     try {
       const res = await api.get(`/orders/${id}`);
       setOrder(res.data);
@@ -27,11 +23,15 @@ const OrderDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchOrderDetail();
+  }, [fetchOrderDetail]);
 
   const getRequiredKeys = (plateType) => {
     const map = {
-      home_appliance: ['delivery_note', 'sn_photo'],
+      home_appliance: ['delivery_note', 'sn_photo', 'energy_label'],
       digital_3c: ['logistics_photo', 'sn_photo'],
       home_decoration: [],
       aging_adaptation: ['sign_receipt', 'delivery_note_signed', 'delivery_photo', 'receipt']
